@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import json
 import requests
+import base64
 import azure.cognitiveservices.speech as speechsdk
 
 # LLM model config
@@ -30,7 +31,6 @@ file_config = speechsdk.audio.AudioOutputConfig(filename=file_name)
 speech_synthesizer = speechsdk.SpeechSynthesizer(
     speech_config=speech_config, audio_config=file_config
 )
-# speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
 # prompt config
 STORY_PROMPT = """你是一位擅长讲故事的机器人，你的任务是根据用户提供的关键词和方向构造出适合小朋友和胎教使用的故事。
@@ -66,11 +66,28 @@ story_type_choice = st.multiselect("故事类型:", story_type)
 story_length = st.slider("故事长度(大约字数):", max_value=500, min_value=100, step=50)
 
 
+def autoplay_audio(file_path: str):
+    with open(file_path, "rb") as f:
+        data = f.read()
+        b64 = base64.b64encode(data).decode()
+        md = f"""
+            <audio controls autoplay="true">
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            """
+        st.markdown(
+            md,
+            unsafe_allow_html=True,
+        )
+
+
 def tts(text: str):
     result = speech_synthesizer.speak_text_async(text).get()
     # Check result
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
         print("Speech synthesized for text [{}]".format(text))
+
+        autoplay_audio(file_name)
     elif result.reason == speechsdk.ResultReason.Canceled:
         cancellation_details = result.cancellation_details
         print("Speech synthesis canceled: {}".format(cancellation_details.reason))
@@ -107,14 +124,9 @@ if st.button("生成故事"):
             story_response = response.json()
             story = story_response.get("choices")[0].get("message").get("content")
             st.session_state.gen_story_content = story
+
+            tts(st.session_state.gen_story_content)
         else:
             st.write("request failed ", response.status_code)
 if "gen_story_content" in st.session_state:
     st.write(st.session_state.gen_story_content)
-
-if st.button("朗读故事"):
-    if st.session_state.gen_story_content:
-        with st.spinner("朗读故事中.."):
-            tts(st.session_state.gen_story_content)
-    else:
-        st.write("还没有生成故事")
