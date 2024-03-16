@@ -1,4 +1,4 @@
-# Story robot based on LLM and Streamlit, 基于 LLM 和 Streamlit 的故事机器人
+# Story robot based on LLM + Azure TTS, build by Streamlit, 基于 LLM 和 Azure TTS 的故事机器人，使用 Streamlit 搭建
 
 1. Install requirements
 
