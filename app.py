@@ -49,7 +49,7 @@ st.subheader("请在下面输入你的故事主题和元素，并选择故事类
 
 story_topic = st.text_area(
     "故事主题:",
-    placeholder="在这里写下你的故事主题梗概，如奥特曼大战怪兽",
+    placeholder="在这里写下你的故事主题梗概，如: 奥特曼大战怪兽",
     max_chars=100,
 )
 
@@ -67,14 +67,10 @@ story_type = [
     "友情",
     "玩具",
 ]
-story_type_choice = st.multiselect("故事类型:", story_type)
+story_type_choice = st.multiselect(
+    "故事类型:", placeholder="选择一个故事类型", options=story_type
+)
 
-voice_type = ["小女孩", "大姐姐", "大哥哥"]
-voice_type_values = [
-    "zh-CN-XiaoyouNeural",
-    "zh-CN-XiaoxiaoNeural",
-    "zh-CN-YunfengNeural",
-]
 voice_types = {
     "小女孩": "zh-CN-XiaoyouNeural",
     "大姐姐": "zh-CN-XiaoxiaoNeural",
@@ -83,7 +79,13 @@ voice_types = {
 
 voice_type_choice = st.selectbox("声音类型:", list(voice_types.keys()))
 
-story_length = st.slider("故事长度(大约字数):", max_value=500, min_value=100, step=50)
+story_len_types = {
+    "较短": "100",
+    "中等": "300",
+    "较长": "500",
+}
+story_len = st.select_slider("故事长度:", options=list(story_len_types.keys()))
+story_length = story_len_types[story_len]
 st.session_state.voice_type = voice_types[voice_type_choice]
 
 
@@ -120,37 +122,44 @@ def tts(text: str):
             print("Error details: {}".format(cancellation_details.error_details))
 
 
-if st.button("生成故事"):
-    with st.spinner("生成故事中"):
-        story_type_str = ", ".join(story_type_choice)
-        default_messages = [
-            {
-                "role": "user",
-                "content": STORY_PROMPT,
-            },
-            {
-                "role": "user",
-                "content": f"故事主题:{story_topic},故事类型:{story_type_str},内容限制字数{story_length}字以内",
-            },
-        ]
+def gen_story():
+    if st.button("生成故事"):
+        if not story_topic or story_topic == "":
+            st.error("请输入故事的主题")
+            return
+        with st.spinner("生成故事中"):
+            story_type_str = ", ".join(story_type_choice)
+            default_messages = [
+                {
+                    "role": "user",
+                    "content": STORY_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": f"故事主题:{story_topic},故事类型:{story_type_str},内容限制字数{story_length}字以内",
+                },
+            ]
 
-        data = json.dumps(
-            {
-                "model": MODEL_NAME,
-                "messages": default_messages,
-                "max_tokens": MAX_TOKENS,
-            }
-        )
-        response = requests.post(MODEL_URL, headers=headers, data=data)
+            data = json.dumps(
+                {
+                    "model": MODEL_NAME,
+                    "messages": default_messages,
+                    "max_tokens": MAX_TOKENS,
+                }
+            )
+            response = requests.post(MODEL_URL, headers=headers, data=data)
 
-        if response.status_code == 200:
-            story_response = response.json()
-            story = story_response.get("choices")[0].get("message").get("content")
-            st.session_state.gen_story_content = story
+            if response.status_code == 200:
+                story_response = response.json()
+                story = story_response.get("choices")[0].get("message").get("content")
+                st.session_state.gen_story_content = story
 
-            st.write(st.session_state.gen_story_content)
-        else:
-            st.write("生成失败, 请稍后重试 ", response.status_code)
-    if st.session_state.gen_story_content:
-        with st.spinner("生成音频中"):
-            tts(st.session_state.gen_story_content)
+                st.write(st.session_state.gen_story_content)
+            else:
+                st.write("生成失败, 请稍后重试 ", response.status_code)
+        if st.session_state.gen_story_content:
+            with st.spinner("生成音频中"):
+                tts(st.session_state.gen_story_content)
+
+
+gen_story()
