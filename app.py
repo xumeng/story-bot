@@ -23,17 +23,18 @@ headers = {
 }
 MAX_TOKENS = 1000
 
+if not st.session_state.keys():
+    st.session_state.gen_story_content = ""
+    st.session_state.voice_type = ""
+
+
 # tts config
 if not speech_key or not service_region:
     st.error("Missing speech key or region in configuration")
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
-speech_config.speech_synthesis_voice_name = "zh-CN-XiaoyouNeural"
-
 file_name = "outputaudio.wav"
 file_config = speechsdk.audio.AudioOutputConfig(filename=file_name)
-speech_synthesizer = speechsdk.SpeechSynthesizer(
-    speech_config=speech_config, audio_config=file_config
-)
+
 
 # prompt config
 STORY_PROMPT = """你是一位擅长讲故事的机器人，你的任务是根据用户提供的关键词和方向构造出适合小朋友和胎教使用的故事。
@@ -68,7 +69,22 @@ story_type = [
 ]
 story_type_choice = st.multiselect("故事类型:", story_type)
 
+voice_type = ["小女孩", "大姐姐", "大哥哥"]
+voice_type_values = [
+    "zh-CN-XiaoyouNeural",
+    "zh-CN-XiaoxiaoNeural",
+    "zh-CN-YunfengNeural",
+]
+voice_types = {
+    "小女孩": "zh-CN-XiaoyouNeural",
+    "大姐姐": "zh-CN-XiaoxiaoNeural",
+    "大哥哥": "zh-CN-YunfengNeural",
+}
+
+voice_type_choice = st.selectbox("声音类型:", list(voice_types.keys()))
+
 story_length = st.slider("故事长度(大约字数):", max_value=500, min_value=100, step=50)
+st.session_state.voice_type = voice_types[voice_type_choice]
 
 
 def autoplay_audio(file_path: str):
@@ -87,6 +103,10 @@ def autoplay_audio(file_path: str):
 
 
 def tts(text: str):
+    speech_config.speech_synthesis_voice_name = st.session_state.voice_type
+    speech_synthesizer = speechsdk.SpeechSynthesizer(
+        speech_config=speech_config, audio_config=file_config
+    )
     result = speech_synthesizer.speak_text_async(text).get()
     # Check result
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
@@ -100,8 +120,6 @@ def tts(text: str):
             print("Error details: {}".format(cancellation_details.error_details))
 
 
-if "gen_story_content" not in st.session_state:
-    st.session_state.gen_story_content = ""
 if st.button("生成故事"):
     with st.spinner("生成故事中"):
         story_type_str = ", ".join(story_type_choice)
@@ -112,7 +130,7 @@ if st.button("生成故事"):
             },
             {
                 "role": "user",
-                "content": f"故事主题:{story_topic}故事类型:{story_type_str},内容{story_length}字左右",
+                "content": f"故事主题:{story_topic},故事类型:{story_type_str},内容限制字数{story_length}字以内",
             },
         ]
 
@@ -131,6 +149,8 @@ if st.button("生成故事"):
             st.session_state.gen_story_content = story
 
             st.write(st.session_state.gen_story_content)
-            tts(st.session_state.gen_story_content)
         else:
-            st.write("request failed ", response.status_code)
+            st.write("生成失败, 请稍后重试 ", response.status_code)
+    if st.session_state.gen_story_content:
+        with st.spinner("生成音频中"):
+            tts(st.session_state.gen_story_content)
