@@ -47,7 +47,9 @@ st.title("故事机器人")
 st.subheader("请在下面输入你的故事主题和元素，并选择故事类型和长度")
 
 story_topic = st.text_area(
-    "故事主题:", placeholder="在这里写下你的故事主题梗概，如奥特曼大战怪兽"
+    "故事主题:",
+    placeholder="在这里写下你的故事主题梗概，如奥特曼大战怪兽",
+    max_chars=100,
 )
 
 story_type = [
