@@ -18,10 +18,11 @@ MAX_TOKENS = 1000
 # tts config
 # speech_key = os.getenv("AZURE_SPEECH_KEY")
 # service_region = os.getenv("AZURE_REGION")
-speech_key = st.secrets["AZURE_SPEECH_KEY"]
-service_region = st.secrets["AZURE_REGION"]
+speech_key = st.secrets["speech_service"]["AZURE_SPEECH_KEY"]
+service_region = st.secrets["speech_service"]["AZURE_REGION"]
 if not speech_key or not service_region:
     st.error("Missing speech key or region in configuration")
+print("$#######", speech_key, service_region, MODEL_TOKEN)
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 speech_config.speech_synthesis_voice_name = "zh-CN-XiaoyouNeural"
 speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
