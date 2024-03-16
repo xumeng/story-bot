@@ -22,10 +22,15 @@ speech_key = st.secrets["speech_service"]["AZURE_SPEECH_KEY"]
 service_region = st.secrets["speech_service"]["AZURE_REGION"]
 if not speech_key or not service_region:
     st.error("Missing speech key or region in configuration")
-print("$#######", speech_key, service_region, MODEL_TOKEN)
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 speech_config.speech_synthesis_voice_name = "zh-CN-XiaoyouNeural"
-speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+
+file_name = "outputaudio.wav"
+file_config = speechsdk.audio.AudioOutputConfig(filename=file_name)
+speech_synthesizer = speechsdk.SpeechSynthesizer(
+    speech_config=speech_config, audio_config=file_config
+)
+# speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
 # prompt config
 STORY_PROMPT = """你是一位擅长讲故事的机器人，你的任务是根据用户提供的关键词和方向构造出适合小朋友和胎教使用的故事。
