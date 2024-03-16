@@ -15,8 +15,10 @@ headers = {
 MAX_TOKENS = 1000
 
 # tts config
-speech_key = os.getenv("AZURE_SPEECH_KEY")
-service_region = os.getenv("AZURE_REGION")
+# speech_key = os.getenv("AZURE_SPEECH_KEY")
+# service_region = os.getenv("AZURE_REGION")
+speech_key = st.secrets["AZURE_SPEECH_KEY"]
+service_region = st.secrets["AZURE_REGION"]
 if not speech_key or not service_region:
     st.error("Missing speech key or region in configuration")
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
