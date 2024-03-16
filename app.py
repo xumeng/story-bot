@@ -7,7 +7,8 @@ import azure.cognitiveservices.speech as speechsdk
 # LLM model config
 MODEL_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 MODEL_NAME = "glm-3-turbo"
-MODEL_TOKEN = os.getenv("GLM_MODEL_TOKEN")
+# MODEL_TOKEN = os.getenv("GLM_MODEL_TOKEN")
+MODEL_TOKEN = st.secrets["GLM_MODEL_TOKEN"]
 headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {MODEL_TOKEN}",
