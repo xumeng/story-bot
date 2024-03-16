@@ -5,11 +5,18 @@ import requests
 import base64
 import azure.cognitiveservices.speech as speechsdk
 
+# env var config
+# MODEL_TOKEN = os.getenv("GLM_MODEL_TOKEN")
+# speech_key = os.getenv("AZURE_SPEECH_KEY")
+# service_region = os.getenv("AZURE_REGION")
+
+MODEL_TOKEN = st.secrets["GLM_MODEL_TOKEN"]
+speech_key = st.secrets["speech_service"]["AZURE_SPEECH_KEY"]
+service_region = st.secrets["speech_service"]["AZURE_REGION"]
+
 # LLM model config
 MODEL_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 MODEL_NAME = "glm-3-turbo"
-MODEL_TOKEN = os.getenv("GLM_MODEL_TOKEN")
-# MODEL_TOKEN = st.secrets["GLM_MODEL_TOKEN"]
 headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {MODEL_TOKEN}",
@@ -17,10 +24,6 @@ headers = {
 MAX_TOKENS = 1000
 
 # tts config
-speech_key = os.getenv("AZURE_SPEECH_KEY")
-service_region = os.getenv("AZURE_REGION")
-# speech_key = st.secrets["speech_service"]["AZURE_SPEECH_KEY"]
-# service_region = st.secrets["speech_service"]["AZURE_REGION"]
 if not speech_key or not service_region:
     st.error("Missing speech key or region in configuration")
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
@@ -125,8 +128,7 @@ if st.button("生成故事"):
             story = story_response.get("choices")[0].get("message").get("content")
             st.session_state.gen_story_content = story
 
+            st.write(st.session_state.gen_story_content)
             tts(st.session_state.gen_story_content)
         else:
             st.write("request failed ", response.status_code)
-if "gen_story_content" in st.session_state:
-    st.write(st.session_state.gen_story_content)
