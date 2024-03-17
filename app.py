@@ -5,11 +5,6 @@ import requests
 import base64
 import azure.cognitiveservices.speech as speechsdk
 
-# env var config
-# MODEL_TOKEN = os.getenv("GLM_MODEL_TOKEN")
-# speech_key = os.getenv("AZURE_SPEECH_KEY")
-# service_region = os.getenv("AZURE_REGION")
-
 MODEL_TOKEN = st.secrets["GLM_MODEL_TOKEN"]
 speech_key = st.secrets["speech_service"]["AZURE_SPEECH_KEY"]
 service_region = st.secrets["speech_service"]["AZURE_REGION"]

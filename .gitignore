@@ -135,3 +135,5 @@ tmpdata/*
 db/*
 
 output*
+
+.streamlit/secrets.toml
